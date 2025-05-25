@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Oscilaciones Sísmicas</title>
+    <script src="three.core.min.js"></script>
+    <link rel="stylesheet" href="styles.css"> 
+</head>
+<body>
+    <div class="app-container">
+        <div class="sidebar">
+            <div class="header">
+                <h1>🏗️ Simulador Sísmico</h1>
+                <p>Análisis de Oscilaciones Estructurales</p>
+            </div>
+            
+            <div class="tabs">
+                <button class="tab active" id="simulation-tab-btn">Simulación</button>
+                <button class="tab" id="guide-tab-btn">Guía</button>
+            </div>
+            
+            <div id="simulation-tab" class="tab-content active">
+                <div class="control-group">
+                    <h3>🏢 Configuración del Edificio</h3>
+                    <div class="control-item">
+                        <label>Número de Pisos:</label>
+                        <div class="floor-controls">
+                            <button class="floor-btn" id="decrease-floors">−</button>
+                            <span class="value-display" id="floor-count">5</span>
+                            <button class="floor-btn" id="increase-floors">+</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <h3>🌊 Parámetros de Oscilación</h3>
+                    <div class="control-item">
+                        <label>Amplitud (m):</label>
+                        <div class="control-value">
+                            <input type="range" class="slider" id="amplitude" min="0.1" max="5.0" step="0.1" value="1.0">
+                            <span class="value-display" id="amplitude-value">1.0</span>
+                        </div>
+                    </div>
+                    <div class="control-item">
+                        <label>Frecuencia (Hz):</label>
+                        <div class="control-value">
+                            <input type="range" class="slider" id="frequency" min="0.1" max="5.0" step="0.1" value="0.5">
+                            <span class="value-display" id="frequency-value">0.5</span>
+                        </div>
+                    </div>
+                    <div class="control-item">
+                        <label>Amortiguamiento:</label>
+                        <div class="control-value">
+                            <input type="range" class="slider" id="damping" min="0.01" max="0.5" step="0.01" value="0.05">
+                            <span class="value-display" id="damping-value">0.05</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="simulation-btn start" id="sim-btn">
+                    ▶️ Iniciar Simulación
+                </button>
+                
+                <div class="control-group">
+                    <h3>📊 Escenarios Predefinidos</h3>
+                    <button class="scenario-btn" id="earthquake-scenario">🌍 Sismo Intenso</button>
+                    <button class="scenario-btn" id="wind-scenario">💨 Viento Fuerte</button>
+                    <button class="scenario-btn" id="modern-scenario">🏗️ Edificio Moderno</button>
+                </div>
+                
+                <div class="monitor">
+                    <h4>📈 Monitor de Oscilaciones</h4>
+                    <div id="floor-monitors"></div>
+                </div>
+            </div>
+            
+            <div id="guide-tab" class="tab-content">
+                <div class="guide-content">
+                    <h4>🔬 Fundamentos Físicos</h4>
+                    <p>Las oscilaciones sísmicas en edificios siguen el modelo de Movimiento Armónico Simple (MAS) amortiguado:</p>
+                    
+                    <div class="equation">x(t) = A × e^(-δt) × cos(ωt + φ)</div>
+                    
+                    <p><strong>Donde:</strong></p>
+                    <p>• A = Amplitud inicial<br>
+                    • δ = Factor de amortiguamiento<br>
+                    • ω = Frecuencia angular<br>
+                    • t = Tiempo</p>
+                    
+                    <h4>🏗️ Resonancia Estructural</h4>
+                    <p>Los pisos superiores experimentan mayor amplificación debido a:</p>
+                    <p>• <strong>Efecto de látigo:</strong> Cada piso amplifica el movimiento del anterior<br>
+                    • <strong>Flexibilidad estructural:</strong> Mayor libertad de movimiento en altura<br>
+                    • <strong>Masa distribuida:</strong> Concentración de fuerzas inerciales</p>
+                    
+                    <h4>🎯 Cómo Usar el Simulador</h4>
+                    <p>1. <strong>Ajusta los pisos</strong> con los botones +/-<br>
+                    2. <strong>Configura parámetros</strong> usando los deslizadores<br>
+                    3. <strong>Inicia simulación</strong> y observa las oscilaciones<br>
+                    4. <strong>Monitorea en tiempo real</strong> el desplazamiento de cada piso<br>
+                    5. <strong>Experimenta</strong> con diferentes escenarios</p>
+                    
+                    <h4>⚙️ Parámetros Explicados</h4>
+                    <p><strong>Amplitud:</strong> Máximo desplazamiento desde la posición de equilibrio<br>
+                    <strong>Frecuencia:</strong> Número de oscilaciones completas por segundo<br>
+                    <strong>Amortiguamiento:</strong> Rapidez con que se disipa la energía</p>
+                    
+                    <h4>🌍 Aplicaciones Reales</h4>
+                    <p>Esta simulación ayuda a entender:</p>
+                    <p>• Diseño antisísmico de edificios<br>
+                    • Análisis de vulnerabilidad estructural<br>
+                    • Optimización de amortiguadores<br>
+                    • Predicción de comportamiento dinámico</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="main-viewport">
+            <div id="canvas-container">
+                <div class="loading">Cargando simulación 3D...</div>
+            </div>
+            
+            <div class="camera-controls">
+                <button class="camera-btn" id="reset-camera" title="Vista Inicial">🏠</button>
+                <button class="camera-btn" id="top-view" title="Vista Superior">⬆️</button>
+                <button class="camera-btn" id="side-view" title="Vista Lateral">↔️</button>
+                <button class="camera-btn" id="front-view" title="Vista Frontal">⬅️</button>
+            </div>
+            
+            <div class="status-bar">
+                <div class="status-item">
+                    <div class="status-indicator" id="sim-indicator"></div>
+                    <span id="sim-status">Simulación Detenida</span>
+                </div>
+                <div class="status-item">
+                    <span>Pisos: <strong id="status-floors">5</strong></span>
+                </div>
+                <div class="status-item">
+                    <span>Tiempo: <strong id="time-display">0.00s</strong></span>
+                </div>
+                <div class="status-item">
+                    <span>FPS: <strong id="fps-display">60</strong></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="scripts.js"></script>
+</body>
+</html>
