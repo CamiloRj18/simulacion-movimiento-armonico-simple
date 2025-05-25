@@ -392,21 +392,34 @@
             simulationTime += 0.016; // ~60fps
             
             floors.forEach((floor, index) => {
+                // Calculate base motion for all floors
+                const dampingFactor = Math.exp(-damping * simulationTime);
+                const baseMotion = amplitude * dampingFactor * 
+                                 Math.cos(2 * Math.PI * frequency * simulationTime);
+                
                 if (index === 0) {
-                    // FOUNDATION FLOOR - COMPLETELY STATIC (like real buildings)
-                    floor.position.x = 0;
+                    // GROUND FLOOR - Minimal movement (realistic behavior)
+                    // Ground floor moves about 5-10% of the base motion
+                    const groundFloorFactor = 0.08; // 8% of base motion
+                    const displacement = baseMotion * groundFloorFactor;
+                    
+                    // Apply minimal movement
+                    floor.position.x = displacement;
                     floor.position.y = 0;
                     floor.position.z = 0;
+                    
+                    // Minimal rotation
+                    floor.rotation.z = displacement * 0.02;
                     floor.rotation.x = 0;
                     floor.rotation.y = 0;
-                    floor.rotation.z = 0;
                     
-                    // Update monitor for foundation (should show 0)
+                    // Update monitor for ground floor
                     const bar = document.getElementById(`floor-${index}-bar`);
                     const value = document.getElementById(`floor-${index}-value`);
                     if (bar && value) {
-                        bar.style.width = '0%';
-                        value.textContent = '0.00 m';
+                        const percentage = (Math.abs(displacement) / (amplitude * groundFloorFactor)) * 100;
+                        bar.style.width = `${Math.min(100, percentage)}%`;
+                        value.textContent = displacement.toFixed(2) + ' m';
                     }
                 } else {
                     // UPPER FLOORS - Progressive movement (realistic physics)
@@ -414,12 +427,7 @@
                     const heightRatio = index / (floorCount - 1); // 0 to 1 from bottom to top
                     const heightFactor = heightRatio * heightRatio; // Quadratic increase for realism
                     
-                    // Damped harmonic oscillator equation
-                    const dampingFactor = Math.exp(-damping * simulationTime);
-                    const baseMotion = amplitude * dampingFactor * 
-                                     Math.cos(2 * Math.PI * frequency * simulationTime);
-                    
-                    // Progressive displacement - only upper floors move
+                    // Progressive displacement - upper floors move more
                     const displacement = baseMotion * heightFactor;
                     
                     // Apply realistic movement
